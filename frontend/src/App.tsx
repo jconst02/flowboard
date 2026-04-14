@@ -1,6 +1,19 @@
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react'
+
 function App() {
-  return <h1>Flowboard</h1>
+  return (
+    <>
+      <header>
+        <Show when="signed-out">
+          <SignInButton />
+          <SignUpButton />
+        </Show>
+        <Show when="signed-in">
+          <UserButton />
+        </Show>
+      </header>
+    </>
+  )
 }
 
-
-export default App;
+export default App
