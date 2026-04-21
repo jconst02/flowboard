@@ -60,3 +60,10 @@ export const getCards = async (listId: string): Promise<Card[]>  => {
   const res = await fetch(`${BASE_URL}/cards/list/${listId}`);
   return res.json();
 }
+
+export const deleteCard = async (cardId: string): Promise<string> => {
+  const res = await fetch(`${BASE_URL}/cards/${cardId}`, {
+    method: "DELETE"
+  });
+  return res.json();
+}

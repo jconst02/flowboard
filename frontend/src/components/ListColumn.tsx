@@ -20,6 +20,7 @@ function ListColumn({ list }: Props) {
     await createCard(title, list.id);
     queryClient.invalidateQueries({ queryKey: ["cards", list.id]} )
     setAdding(false);
+    setTitle("");
   }
 
     return (
