@@ -1,5 +1,5 @@
 import { useState } from "react"
-import CreateBoardModal from "../components/CreateBoardModal";
+import CreateModal from "../components/CreateModal";
 import { createBoard } from "../api/api";
 import { useAuth } from "@clerk/react";
 import { useBoards } from "../hooks/useBoards";
@@ -19,7 +19,7 @@ function Home() {
   }
   
   return (
-    <div className="bg-gray-950 min-h-screen text-white p-6">
+    <div className="bg-gray-950 text-white p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">My boards</h2>
         <button 
@@ -37,7 +37,9 @@ function Home() {
       </div>
 
       {showModal && (
-        <CreateBoardModal 
+        <CreateModal
+          title="Create Board"
+          placeholder="Board title"
           onClose={() => setShowModal(false)}
           onSubmit={handleCreate}
         />
