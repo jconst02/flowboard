@@ -1,10 +1,11 @@
 import { useState } from "react"
 import CreateModal from "../components/CreateModal";
-import { createList } from "../api/api";
+import { createList, moveCard } from "../api/api";
 import { useLists } from "../hooks/useLists";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom"
 import ListColumn from "../components/ListColumn";
+import { DragDropProvider } from "@dnd-kit/react"
 
 function Board() {
   const { boardId } = useParams();
@@ -19,32 +20,58 @@ function Board() {
     setShowModal(false)
   }
 
-  return (
-    <div className="bg-gray-950 text-white p-6 h-full">
-      <div className="flex items-center justify-between mb-6">
-        <button 
-          onClick={() => setShowModal(true)}
-          className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
-        >
-          Add list
-        </button>
-      </div>
+  const handleDrag = async (event) => {
+    const { operation, canceled } = event;
+    if (canceled) return;
 
-      <div className="grid grid-flow-col auto-cols-[200px] overflow-x-auto overflow-y-auto h-[calc(100vh-180px)]">
-        {lists?.map(list => (
-          <ListColumn key={list.id} list={list} />
-        ))}
+    const { source } = operation;
+    // if (!isortabl)
+
+    console.log(source);
+
+    const { initialIndex, index, initialGroup, group } = source;
+
+    if (initialIndex === index && initialGroup === group) return;
+
+    await moveCard(source.id, group, index);
+
+    queryClient.invalidateQueries({ queryKey: ["cards", initialGroup] });
+    queryClient.invalidateQueries({ queryKey: ["cards", group] });
+  }
+
+  const handleDragOver = async(event) => {
+    // event.preventDefault();
+    console.log("yeah yeah");
+  }
+
+  return (
+    <DragDropProvider onDragEnd={handleDrag} onDragOver={handleDragOver}>
+      <div className="bg-gray-950 text-white p-6 h-full">
+        <div className="flex items-center justify-between mb-6">
+          <button 
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
+          >
+            Add list
+          </button>
+        </div>
+
+        <div className="grid grid-flow-col auto-cols-[200px] overflow-x-auto overflow-y-auto h-[calc(100vh-180px)]">
+          {lists?.map(list => (
+            <ListColumn key={list.id} list={list} />
+          ))}
+        </div>
+        
+        {showModal && (
+          <CreateModal
+            title="Create List"
+            placeholder="list title"
+            onClose={() => setShowModal(false)}
+            onSubmit={handleCreate}
+          />
+        )}
       </div>
-      
-      {showModal && (
-        <CreateModal
-          title="Create List"
-          placeholder="list title"
-          onClose={() => setShowModal(false)}
-          onSubmit={handleCreate}
-        />
-      )}
-    </div>
+    </DragDropProvider>
   )
 }
 

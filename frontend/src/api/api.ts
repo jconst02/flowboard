@@ -67,3 +67,12 @@ export const deleteCard = async (cardId: string): Promise<string> => {
   });
   return res.json();
 }
+
+export const moveCard = async (cardId: string, listId: string, position: number): Promise<Card> => {
+  const res = await fetch(`${BASE_URL}/cards/${cardId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ list_id: listId, position })
+  });
+  return res.json();
+}

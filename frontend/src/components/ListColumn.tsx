@@ -4,6 +4,7 @@ import type { List } from "../types";
 import KanbanCard from "./KanbanCard";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useDroppable } from '@dnd-kit/react';
 
 interface Props {
     list: List
@@ -11,10 +12,14 @@ interface Props {
 
 function ListColumn({ list }: Props) {
   const { data: cards } = useCards(list.id);
-
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("")
+
+  const { ref } = useDroppable({
+    id: list.id,
+  });
+
   
   const handleAddCard = async() => {
     await createCard(title, list.id);
@@ -26,9 +31,11 @@ function ListColumn({ list }: Props) {
     return (
       <div className="flex flex-col bg-gray-800 rounded-none p-4 flex-shrink-0 border-r border-gray-700">
         <h3 className="font-semibold text-white text-center mb-3">{list.title}</h3>
-        {cards?.map(card => (
-            <KanbanCard key={card.id} card={card}></KanbanCard>
-        ))}
+        <div ref={ref} className="flex flex-col gap-2 flex-1">
+          {cards?.map((card, index) => (
+              <KanbanCard key={card.id} card={card} index={index}></KanbanCard>
+          ))}
+        </div>
         { adding ? (
           <div className="mt-2">
               <input
