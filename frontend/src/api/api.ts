@@ -47,11 +47,11 @@ export const getLists = async (boardId: string): Promise<List[]> => {
 
 //CARDS
 
-export const createCard = async (title: string, listId: string): Promise<Card>  => {
+export const createCard = async (title: string, listId: string, boardId: string): Promise<Card>  => {
   const res = await fetch(`${BASE_URL}/cards`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, list_id: listId})
+    body: JSON.stringify({ title, list_id: listId, board_id: boardId })
   });
   return res.json();
 }
@@ -75,4 +75,9 @@ export const moveCard = async (cardId: string, listId: string, position: number)
     body: JSON.stringify({ list_id: listId, position })
   });
   return res.json();
+}
+
+export const getCardsByBoard = async (boardId: string): Promise<Card[]> => {
+  const res = await fetch(`${BASE_URL}/boards/${boardId}/cards`)
+  return res.json()
 }

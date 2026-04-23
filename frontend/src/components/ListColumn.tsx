@@ -1,29 +1,32 @@
 import { createCard } from "../api/api";
-import { useCards } from "../hooks/useCards";
-import type { List } from "../types";
+import type { Card, List } from "../types";
 import KanbanCard from "./KanbanCard";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useDroppable } from '@dnd-kit/react';
+import { useDroppable,  } from '@dnd-kit/react';
+import { CollisionPriority } from '@dnd-kit/abstract';
 
 interface Props {
-    list: List
+    list: List,
+    cards: Card[]
 }
 
-function ListColumn({ list }: Props) {
-  const { data: cards } = useCards(list.id);
+function ListColumn({ list, cards }: Props) {
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("")
 
   const { ref } = useDroppable({
     id: list.id,
+    type: 'column',
+    accept: 'item',
+    collisionPriority: CollisionPriority.Low
   });
 
   
   const handleAddCard = async() => {
-    await createCard(title, list.id);
-    queryClient.invalidateQueries({ queryKey: ["cards", list.id]} )
+    await createCard(title, list.id, list.board_id);
+    queryClient.invalidateQueries({ queryKey: ["cards", list.board_id]} )
     setAdding(false);
     setTitle("");
   }
@@ -31,7 +34,7 @@ function ListColumn({ list }: Props) {
     return (
       <div className="flex flex-col bg-gray-800 rounded-none p-4 flex-shrink-0 border-r border-gray-700">
         <h3 className="font-semibold text-white text-center mb-3">{list.title}</h3>
-        <div ref={ref} className="flex flex-col gap-2 flex-1">
+        <div ref={ref} className="flex flex-col gap-2 flex-1 min-h-[200px]">
           {cards?.map((card, index) => (
               <KanbanCard key={card.id} card={card} index={index}></KanbanCard>
           ))}

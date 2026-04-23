@@ -11,11 +11,17 @@ interface Props {
 function KanbanCard({ card , index }: Props) {
     const queryClient = useQueryClient();
 
-    const { ref } = useSortable({ id: card.id, index, group: card.list_id });
+    const { ref } = useSortable({ 
+        id: card.id, 
+        index, 
+        group: card.list_id,
+        type: 'item',
+        accept: 'item'
+    });
 
     const handleDeleteCard = async() => {
         await deleteCard(card.id);
-        queryClient.invalidateQueries({ queryKey: ["cards", card.list_id]});
+        queryClient.invalidateQueries({ queryKey: ["cards", card.board_id]});
     }
     return (
         <div ref={ref} className="group relative bg-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-600 transition-colors">

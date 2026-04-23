@@ -5,14 +5,23 @@ import { useLists } from "../hooks/useLists";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom"
 import ListColumn from "../components/ListColumn";
-import { DragDropProvider } from "@dnd-kit/react"
+import { DragDropProvider } from "@dnd-kit/react";
+import { useCards } from "../hooks/useCards";
+import type { Card } from "../types";
 
 function Board() {
   const { boardId } = useParams();
-  const { data: lists } = useLists(boardId); 
+  const { data: lists } = useLists(boardId);
 
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
+
+  const { data: cards } = useCards(boardId);
+
+  const cardsByList = cards?.reduce((acc, card) => {
+    acc[card.list_id] = [...(acc[card.list_id] ?? []), card]
+    return acc
+  }, {} as Record<string, Card[]>) ?? {};
 
   const handleCreate = async(title: string) => {
     await createList(title, boardId);
@@ -58,7 +67,7 @@ function Board() {
 
         <div className="grid grid-flow-col auto-cols-[200px] overflow-x-auto overflow-y-auto h-[calc(100vh-180px)]">
           {lists?.map(list => (
-            <ListColumn key={list.id} list={list} />
+            <ListColumn key={list.id} list={list} cards={cardsByList[list.id]}/>
           ))}
         </div>
         
