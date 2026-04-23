@@ -20,11 +20,11 @@ export const createList = async (req: Request, res: Response) => {
 }
 
 export const getLists = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { boardId } = req.params;
 
     const lists = await pool.query(
         "SELECT * FROM lists WHERE board_id = $1",
-        [id]
+        [boardId]
     );
 
     return res.json(lists.rows);
@@ -32,11 +32,11 @@ export const getLists = async (req: Request, res: Response) => {
 
 
 export const deleteList = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { listId } = req.params;
 
     const list = await pool.query(
         "SELECT board_id, position FROM lists WHERE id = $1",
-        [id]
+        [listId]
     );
     
     if (list.rowCount === 0){
@@ -51,7 +51,7 @@ export const deleteList = async (req: Request, res: Response) => {
         [board_id, position]
     )
 
-    await pool.query("DELETE FROM lists WHERE id = $1", [id]);
+    await pool.query("DELETE FROM lists WHERE id = $1", [listId]);
 
 
     return res.json({ message: "List deleted" });

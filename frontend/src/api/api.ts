@@ -41,7 +41,7 @@ export const createList = async (title: string, boardId: string): Promise<List> 
 }
 
 export const getLists = async (boardId: string): Promise<List[]> => {
-  const res = await fetch(`${BASE_URL}/lists/board/${boardId}`);
+  const res = await fetch(`${BASE_URL}/boards/${boardId}/lists`);
   return res.json();
 }
 
@@ -57,7 +57,7 @@ export const createCard = async (title: string, listId: string): Promise<Card>  
 }
 
 export const getCards = async (listId: string): Promise<Card[]>  => {
-  const res = await fetch(`${BASE_URL}/cards/list/${listId}`);
+  const res = await fetch(`${BASE_URL}/lists/${listId}/cards`);
   return res.json();
 }
 

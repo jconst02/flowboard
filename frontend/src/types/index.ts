@@ -16,5 +16,6 @@ export interface Card {
     id: string
     title: string
     list_id: string
+    board_id: string
     position: number
 }

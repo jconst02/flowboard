@@ -13,11 +13,11 @@ export const createBoard = async (req: Request, res: Response) => {
 }
 
 export const getBoard = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { boardId } = req.params;
 
     const board = await pool.query(
         "SELECT * FROM boards WHERE id = $1",
-        [id]
+        [boardId]
     );
 
     if (board.rows.length === 0) {
@@ -39,11 +39,11 @@ export const getBoards = async (req: Request, res: Response) => {
 }
 
 export const deleteBoard = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { boardId } = req.params;
 
     const result = await pool.query(
         "DELETE FROM boards WHERE id = $1 RETURNING *",
-        [id]
+        [boardId]
     );
 
     if (result.rowCount === 0) {
