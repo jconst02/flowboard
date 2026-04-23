@@ -1,15 +1,13 @@
 import type { Card } from "../types";
-import { deleteCard } from "../api/api";
-import { useQueryClient } from "@tanstack/react-query";
 import { useSortable } from '@dnd-kit/react/sortable';
 
 interface Props {
     card: Card,
-    index: number
+    index: number,
+    onDelete: () => void
 }
 
-function KanbanCard({ card , index }: Props) {
-    const queryClient = useQueryClient();
+function KanbanCard({ card , index, onDelete }: Props) {
 
     const { ref } = useSortable({ 
         id: card.id, 
@@ -19,15 +17,12 @@ function KanbanCard({ card , index }: Props) {
         accept: 'item'
     });
 
-    const handleDeleteCard = async() => {
-        await deleteCard(card.id);
-        queryClient.invalidateQueries({ queryKey: ["cards", card.board_id]});
-    }
+
     return (
         <div ref={ref} className="group relative bg-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-600 transition-colors">
           <p className="text-white text-sm break-words">{card.title}</p>
           <button
-            onClick={handleDeleteCard}
+            onClick={onDelete}
             className="absolute top-0 right-1 opacity-0 hover:text-red-600 text-xs group-hover:opacity-50"
             >
             x

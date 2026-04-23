@@ -7,11 +7,13 @@ import { useDroppable,  } from '@dnd-kit/react';
 import { CollisionPriority } from '@dnd-kit/abstract';
 
 interface Props {
-    list: List,
-    cards: Card[]
+  list: List,
+  cards: Card[],
+  onDeleteCard: (cardId: string, listId: string) => void,
+  onAddCard: (title: string, listId: string) => void
 }
 
-function ListColumn({ list, cards }: Props) {
+function ListColumn({ list, cards, onDeleteCard, onAddCard }: Props) {
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("")
@@ -25,8 +27,7 @@ function ListColumn({ list, cards }: Props) {
 
   
   const handleAddCard = async() => {
-    await createCard(title, list.id, list.board_id);
-    queryClient.invalidateQueries({ queryKey: ["cards", list.board_id]} )
+    await onAddCard(title, list.id);
     setAdding(false);
     setTitle("");
   }
@@ -36,7 +37,12 @@ function ListColumn({ list, cards }: Props) {
         <h3 className="font-semibold text-white text-center mb-3">{list.title}</h3>
         <div ref={ref} className="flex flex-col gap-2 flex-1 min-h-[200px]">
           {cards?.map((card, index) => (
-              <KanbanCard key={card.id} card={card} index={index}></KanbanCard>
+              <KanbanCard 
+                key={card.id}
+                card={card}
+                index={index}
+                onDelete={() => onDeleteCard(card.id, card.list_id)}
+              />
           ))}
         </div>
         { adding ? (

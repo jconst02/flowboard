@@ -1,56 +1,102 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import CreateModal from "../components/CreateModal";
-import { createList, moveCard } from "../api/api";
+import { createCard, createList, deleteCard, getCardsByBoard, getLists, moveCard } from "../api/api";
 import { useLists } from "../hooks/useLists";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom"
 import ListColumn from "../components/ListColumn";
 import { DragDropProvider } from "@dnd-kit/react";
 import { useCards } from "../hooks/useCards";
-import type { Card } from "../types";
+import type { Card, List } from "../types";
+import { move } from "@dnd-kit/helpers"
+import { isSortable } from "@dnd-kit/react/sortable"
 
 function Board() {
   const { boardId } = useParams();
-  const { data: lists } = useLists(boardId);
-
-  const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
 
-  const { data: cards } = useCards(boardId);
+  const [lists, setLists] = useState<List[]>([])
+  const [cards, setCards] = useState<Card[]>([])
+  const [items, setItems] = useState<Record<string, Card[]>>({});
 
-  const cardsByList = cards?.reduce((acc, card) => {
-    acc[card.list_id] = [...(acc[card.list_id] ?? []), card]
-    return acc
-  }, {} as Record<string, Card[]>) ?? {};
+  const buildItems = (lists: List[], cards: Card[]) => {
+    const byList = lists.reduce((acc, list) => {
+      acc[list.id] = []
+      return acc;
+    }, {} as Record<string, Card[]>);
 
-  const handleCreate = async(title: string) => {
-    await createList(title, boardId);
-    queryClient.invalidateQueries({ queryKey: ["lists", boardId]} )
-    setShowModal(false)
+    cards.forEach(card => {
+      byList[card.list_id]?.push(card);
+    });
+
+    return byList;
   }
 
+  useEffect(() => {
+    if (!boardId) return;
+
+    Promise.all([
+      getLists(boardId),
+      getCardsByBoard(boardId)
+    ]).then(([lists, cards]) => {
+      setLists(lists);
+      setCards(cards);
+      setItems(buildItems(lists, cards));
+    });
+  },[boardId]);
+
+  //updeta this. i think group is wrong. get new group. redo func pretty much
   const handleDrag = async (event) => {
+    console.log("handleDrag fired", event)
     const { operation, canceled } = event;
     if (canceled) return;
 
     const { source } = operation;
-    // if (!isortabl)
-
-    console.log(source);
-
     const { initialIndex, index, initialGroup, group } = source;
 
     if (initialIndex === index && initialGroup === group) return;
 
-    await moveCard(source.id, group, index);
-
-    queryClient.invalidateQueries({ queryKey: ["cards", initialGroup] });
-    queryClient.invalidateQueries({ queryKey: ["cards", group] });
+    moveCard(source.id, group, index);
   }
 
+  //idk somethign here: TODO: FIX THSI AND MAYBE HANDLE DRAG TO ALLOW TO DRAG OVER
   const handleDragOver = async(event) => {
-    // event.preventDefault();
-    console.log("yeah yeah");
+    const { source, target } = event.operation
+    if (!isSortable(source)) return
+    if (isSortable(target) && source.group === target.group) return
+    setItems(items => move(items, event))
+  }
+
+  const handleCreate = async(title: string) => {
+    const newList = await createList(title, boardId);
+    setLists(prev => [...prev, newList])
+    setItems(prev => ({ ...prev, [newList.id]: [] }))
+    setShowModal(false)
+  }
+
+  const handleDeleteCard = (cardId: string, listId: string) => {
+    deleteCard(cardId)
+    setItems(prev => ({
+      ...prev,
+      [listId]: prev[listId].filter(c => c.id !== cardId)
+    }))
+    console.log(items);
+  }
+
+  // const handleDeleteCard = async (cardId: string, listId: string) => {
+  //   await deleteCard(cardId)
+  //   const newCards = await getCardsByBoard(boardId!)
+  //   setCards(newCards)
+  //   setItems(buildItems(lists, newCards))
+  // }
+
+  const handleAddCard = async (title: string, listId: string) => {
+    const newCard = await createCard(title, listId, boardId!);
+    console.log(newCard);
+    setItems(prev => ({
+      ...prev,
+      [listId]: [...(prev[listId] ?? []), newCard]
+    }))
   }
 
   return (
@@ -67,7 +113,7 @@ function Board() {
 
         <div className="grid grid-flow-col auto-cols-[200px] overflow-x-auto overflow-y-auto h-[calc(100vh-180px)]">
           {lists?.map(list => (
-            <ListColumn key={list.id} list={list} cards={cardsByList[list.id]}/>
+            <ListColumn key={list.id} list={list} cards={items[list.id]} onDeleteCard={handleDeleteCard} onAddCard={handleAddCard}/>
           ))}
         </div>
         
