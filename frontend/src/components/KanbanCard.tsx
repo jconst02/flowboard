@@ -4,15 +4,16 @@ import { useSortable } from '@dnd-kit/react/sortable';
 interface Props {
     card: Card,
     index: number,
+    listId: string,
     onDelete: () => void
 }
 
-function KanbanCard({ card , index, onDelete }: Props) {
+function KanbanCard({ card , index, listId, onDelete }: Props) {
 
     const { ref } = useSortable({ 
         id: card.id, 
         index, 
-        group: card.list_id,
+        group: listId,
         type: 'item',
         accept: 'item'
     });

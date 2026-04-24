@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react"
 import CreateModal from "../components/CreateModal";
 import { createCard, createList, deleteCard, getCardsByBoard, getLists, moveCard } from "../api/api";
-import { useLists } from "../hooks/useLists";
-import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom"
 import ListColumn from "../components/ListColumn";
 import { DragDropProvider } from "@dnd-kit/react";
-import { useCards } from "../hooks/useCards";
 import type { Card, List } from "../types";
 import { move } from "@dnd-kit/helpers"
 import { isSortable } from "@dnd-kit/react/sortable"
@@ -15,8 +12,8 @@ function Board() {
   const { boardId } = useParams();
   const [showModal, setShowModal] = useState(false);
 
-  const [lists, setLists] = useState<List[]>([])
-  const [cards, setCards] = useState<Card[]>([])
+  const [lists, setLists] = useState<List[]>([]);
+  const [cards, setCards] = useState<Card[]>([]);
   const [items, setItems] = useState<Record<string, Card[]>>({});
 
   const buildItems = (lists: List[], cards: Card[]) => {
@@ -45,25 +42,35 @@ function Board() {
     });
   },[boardId]);
 
-  //updeta this. i think group is wrong. get new group. redo func pretty much
-  const handleDrag = async (event) => {
-    console.log("handleDrag fired", event)
+  //updeta this. i think group is wrong. get new group. redo func pretty much. WORKS I THINK
+  const handleDragEnd = async (event) => {
     const { operation, canceled } = event;
+
     if (canceled) return;
 
     const { source } = operation;
-    const { initialIndex, index, initialGroup, group } = source;
 
-    if (initialIndex === index && initialGroup === group) return;
+    const newListId = source.group;
+    const newIndex = source.index;
 
-    moveCard(source.id, group, index);
+    if (!newListId) return;
+
+    setItems(prev => ({
+      ...prev,
+      [newListId]: prev[newListId].map(card =>
+        card.id === source.id ? { ...card, list_id: newListId } : card
+      )
+    }));
+
+    await moveCard(source.id, newListId, newIndex);
   }
 
-  //idk somethign here: TODO: FIX THSI AND MAYBE HANDLE DRAG TO ALLOW TO DRAG OVER
+  //5db is im moving from. 12b is where im dropping
+
+  //idk somethign here: TODO: FIX THSI AND MAYBE HANDLE DRAG TO ALLOW TO DRAG OVER/ FIXED I THINK
   const handleDragOver = async(event) => {
-    const { source, target } = event.operation
+    const { source } = event.operation
     if (!isSortable(source)) return
-    if (isSortable(target) && source.group === target.group) return
     setItems(items => move(items, event))
   }
 
@@ -74,21 +81,14 @@ function Board() {
     setShowModal(false)
   }
 
-  const handleDeleteCard = (cardId: string, listId: string) => {
-    deleteCard(cardId)
+  const handleDeleteCard = async (cardId: string, listId: string) => {
+    await deleteCard(cardId)
     setItems(prev => ({
       ...prev,
       [listId]: prev[listId].filter(c => c.id !== cardId)
     }))
     console.log(items);
   }
-
-  // const handleDeleteCard = async (cardId: string, listId: string) => {
-  //   await deleteCard(cardId)
-  //   const newCards = await getCardsByBoard(boardId!)
-  //   setCards(newCards)
-  //   setItems(buildItems(lists, newCards))
-  // }
 
   const handleAddCard = async (title: string, listId: string) => {
     const newCard = await createCard(title, listId, boardId!);
@@ -100,7 +100,7 @@ function Board() {
   }
 
   return (
-    <DragDropProvider onDragEnd={handleDrag} onDragOver={handleDragOver}>
+    <DragDropProvider onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
       <div className="bg-gray-950 text-white p-6 h-full">
         <div className="flex items-center justify-between mb-6">
           <button 

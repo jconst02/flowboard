@@ -22,6 +22,9 @@ function ListColumn({ list, cards, onDeleteCard, onAddCard }: Props) {
     id: list.id,
     type: 'column',
     accept: 'item',
+    data: {
+      group: list.id
+    },
     collisionPriority: CollisionPriority.Low
   });
 
@@ -41,7 +44,8 @@ function ListColumn({ list, cards, onDeleteCard, onAddCard }: Props) {
                 key={card.id}
                 card={card}
                 index={index}
-                onDelete={() => onDeleteCard(card.id, card.list_id)}
+                listId={list.id}
+                onDelete={() => onDeleteCard(card.id, list.id)}
               />
           ))}
         </div>
