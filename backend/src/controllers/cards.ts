@@ -47,72 +47,91 @@ export const moveCard = async (req: Request, res: Response) => {
     const { cardId } = req.params;
     const { list_id, position } = req.body;
 
-    const current = await pool.query(
-        "SELECT list_id, position FROM cards WHERE id = $1",
-        [cardId]
-    );
+    await pool.query("BEGIN");
 
-    const oldListId = current.rows[0].list_id;
-    const oldPosition = current.rows[0].position;
-
-    if (oldListId === list_id) {
-        if (oldPosition < position) {
-            await pool.query(
-                `UPDATE cards SET position = position - 1
-                WHERE list_id = $1 AND position > $2 AND position <= $3 AND id != $4`,
-                [list_id, oldPosition, position, cardId]
-            );
+    try {
+        const current = await pool.query(
+            "SELECT list_id, position FROM cards WHERE id = $1",
+            [cardId]
+        );
+    
+        const oldListId = current.rows[0].list_id;
+        const oldPosition = current.rows[0].position;
+    
+        if (oldListId === list_id) {
+            if (oldPosition < position) {
+                await pool.query(
+                    `UPDATE cards SET position = position - 1
+                    WHERE list_id = $1 AND position > $2 AND position <= $3 AND id != $4`,
+                    [list_id, oldPosition, position, cardId]
+                );
+            } else {
+                await pool.query(
+                    `UPDATE cards SET position = position + 1
+                    WHERE list_id = $1 AND position >= $2 AND position < $3 AND id != $4`,
+                    [list_id, position, oldPosition, cardId]
+                );
+            }
         } else {
             await pool.query(
+                `UPDATE cards SET position = position - 1
+                WHERE list_id = $1 AND position > $2 AND id != $3`,
+                [oldListId, oldPosition, cardId]
+            );
+            await pool.query(
                 `UPDATE cards SET position = position + 1
-                WHERE list_id = $1 AND position >= $2 AND position < $3 AND id != $4`,
-                [list_id, position, oldPosition, cardId]
+                WHERE list_id = $1 AND position >= $2`,
+                [list_id, position]
             );
         }
-    } else {
-        await pool.query(
-            `UPDATE cards SET position = position - 1
-            WHERE list_id = $1 AND position > $2 AND id != $3`,
-            [oldListId, oldPosition, cardId]
+    
+        const cards = await pool.query(
+            "UPDATE cards SET list_id = $1, position = $2 WHERE id = $3 RETURNING *",
+            [list_id, position, cardId]
         );
-        await pool.query(
-            `UPDATE cards SET position = position + 1
-            WHERE list_id = $1 AND position >= $2`,
-            [list_id, position]
-        );
+        
+        await pool.query("COMMIT");
+
+        return res.json(cards.rows[0]);
+
+    } catch(e) {
+        await pool.query("ROLLBACK");
+        throw e;
     }
-
-    const cards = await pool.query(
-        "UPDATE cards SET list_id = $1, position = $2 WHERE id = $3 RETURNING *",
-        [list_id, position, cardId]
-    );
-
-    return res.json(cards.rows[0]);
 }
 
 
 export const deleteCard = async (req: Request, res: Response) => {
     const { cardId } = req.params;
 
-    const card = await pool.query(
-        "SELECT list_id, position FROM cards WHERE id = $1",
-        [cardId]
-    );
+    await pool.query("BEGIN");
 
-    if (card.rowCount === 0) {
-        return res.status(404).json({ error: "Card not found" });
-    };
+    try {
+        const card = await pool.query(
+            "SELECT list_id, position FROM cards WHERE id = $1",
+            [cardId]
+        );
+    
+        if (card.rowCount === 0) {
+            return res.status(404).json({ error: "Card not found" });
+        };
+    
+        const { list_id, position } = card.rows[0];
+    
+        await pool.query(
+            `UPDATE cards SET position = position - 1
+            WHERE list_id = $1 AND position > $2`,
+            [list_id, position]
+        );
+    
+        await pool.query("DELETE FROM cards WHERE id = $1", [cardId]);
+    
+        await pool.query("COMMIT");
 
-    const { list_id, position } = card.rows[0];
+        return res.json({ message: "Card deleted" });
 
-    await pool.query(
-        `UPDATE cards SET position = position - 1
-        WHERE list_id = $1 AND position > $2`,
-        [list_id, position]
-    );
-
-    await pool.query("DELETE FROM cards WHERE id = $1", [cardId]);
-
-
-    return res.json({ message: "Card deleted" });
+    } catch(e) {
+        await pool.query("ROLLBACK");
+        throw e;
+    }
 }

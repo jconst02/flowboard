@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import CreateModal from "../components/CreateModal";
-import { createCard, createList, deleteCard, getCardsByBoard, getLists, moveCard } from "../api/api";
+import { createCard, createList, deleteCard, deleteList, getCardsByBoard, getLists, moveCard } from "../api/api";
 import { useParams } from "react-router-dom"
 import ListColumn from "../components/ListColumn";
 import { DragDropProvider } from "@dnd-kit/react";
@@ -72,11 +72,21 @@ function Board() {
     setItems(items => move(items, event))
   }
 
-  const handleCreate = async(title: string) => {
+  const handleCreateList = async(title: string) => {
     const newList = await createList(title, boardId);
     setLists(prev => [...prev, newList])
     setItems(prev => ({ ...prev, [newList.id]: [] }))
     setShowModal(false)
+  }
+
+  const handleDeleteList = async(listId: string) => {
+    await deleteList(listId);
+    setLists(prev => prev.filter(l => l.id !== listId));
+    setItems(prev => {
+      const updated = { ...prev }
+      delete updated[listId]
+      return updated
+    })
   }
 
   const handleDeleteCard = async (cardId: string, listId: string) => {
@@ -111,7 +121,14 @@ function Board() {
 
         <div className="grid grid-flow-col auto-cols-[200px] overflow-x-auto overflow-y-auto h-[calc(100vh-180px)]">
           {lists?.map(list => (
-            <ListColumn key={list.id} list={list} cards={items[list.id]} onDeleteCard={handleDeleteCard} onAddCard={handleAddCard}/>
+            <ListColumn 
+              key={list.id} 
+              list={list} 
+              cards={items[list.id]}
+              onDeleteList={handleDeleteList}
+              onDeleteCard={handleDeleteCard} 
+              onAddCard={handleAddCard}
+            />
           ))}
         </div>
         
@@ -120,7 +137,7 @@ function Board() {
             title="Create List"
             placeholder="list title"
             onClose={() => setShowModal(false)}
-            onSubmit={handleCreate}
+            onSubmit={handleCreateList}
           />
         )}
       </div>

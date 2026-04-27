@@ -45,6 +45,13 @@ export const getLists = async (boardId: string): Promise<List[]> => {
   return res.json();
 }
 
+export const deleteList = async (listId: string): Promise<string> => {
+  const res = await fetch(`${BASE_URL}/lists/${listId}`, {
+    method: "DELETE"
+  });
+  return res.json();
+}
+
 //CARDS
 
 export const createCard = async (title: string, listId: string, boardId: string): Promise<Card>  => {

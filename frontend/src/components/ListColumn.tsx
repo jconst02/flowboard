@@ -7,11 +7,12 @@ import { CollisionPriority } from '@dnd-kit/abstract';
 interface Props {
   list: List,
   cards: Card[],
+  onDeleteList: (listId: string) => void,
   onDeleteCard: (cardId: string, listId: string) => void,
   onAddCard: (title: string, listId: string) => void
 }
 
-function ListColumn({ list, cards, onDeleteCard, onAddCard }: Props) {
+function ListColumn({ list, cards, onDeleteList, onDeleteCard, onAddCard }: Props) {
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("")
 
@@ -34,7 +35,10 @@ function ListColumn({ list, cards, onDeleteCard, onAddCard }: Props) {
 
     return (
       <div className="flex flex-col bg-gray-800 rounded-none p-4 flex-shrink-0 border-r border-gray-700">
-        <h3 className="font-semibold text-white text-center mb-3">{list.title}</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-white text-center">{list.title}</h3>
+          <button className="text-gray-400 hover:text-red-400 cursor-pointer" onClick={() => onDeleteList(list.id)}>X</button>
+        </div>
         <div ref={ref} className="flex flex-col gap-2 flex-1 min-h-[200px]">
           {cards?.map((card, index) => (
               <KanbanCard 
