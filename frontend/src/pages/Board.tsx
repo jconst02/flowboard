@@ -13,7 +13,6 @@ function Board() {
   const [showModal, setShowModal] = useState(false);
 
   const [lists, setLists] = useState<List[]>([]);
-  const [cards, setCards] = useState<Card[]>([]);
   const [items, setItems] = useState<Record<string, Card[]>>({});
 
   const buildItems = (lists: List[], cards: Card[]) => {
@@ -37,7 +36,6 @@ function Board() {
       getCardsByBoard(boardId)
     ]).then(([lists, cards]) => {
       setLists(lists);
-      setCards(cards);
       setItems(buildItems(lists, cards));
     });
   },[boardId]);

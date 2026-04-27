@@ -1,8 +1,6 @@
-import { createCard } from "../api/api";
 import type { Card, List } from "../types";
 import KanbanCard from "./KanbanCard";
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useDroppable,  } from '@dnd-kit/react';
 import { CollisionPriority } from '@dnd-kit/abstract';
 
@@ -14,7 +12,6 @@ interface Props {
 }
 
 function ListColumn({ list, cards, onDeleteCard, onAddCard }: Props) {
-  const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("")
 
