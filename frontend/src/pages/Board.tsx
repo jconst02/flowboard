@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import CreateModal from "../components/CreateModal";
-import { createCard, createList, deleteCard, deleteList, getCardsByBoard, getLists, moveCard } from "../api/api";
+import { createCard, createList, deleteCard, deleteList, getBoard, getCardsByBoard, getLists, moveCard } from "../api/api";
 import { useParams } from "react-router-dom"
 import ListColumn from "../components/ListColumn";
 import { DragDropProvider } from "@dnd-kit/react";
@@ -14,6 +14,7 @@ function Board() {
 
   const [lists, setLists] = useState<List[]>([]);
   const [items, setItems] = useState<Record<string, Card[]>>({});
+  const [boardTitle, setBoardTitle] = useState("");
 
   const buildItems = (lists: List[], cards: Card[]) => {
     const byList = lists.reduce((acc, list) => {
@@ -32,9 +33,11 @@ function Board() {
     if (!boardId) return;
 
     Promise.all([
+      getBoard(boardId),
       getLists(boardId),
       getCardsByBoard(boardId)
-    ]).then(([lists, cards]) => {
+    ]).then(([board, lists, cards]) => {
+      setBoardTitle(board.title);
       setLists(lists);
       setItems(buildItems(lists, cards));
     });
@@ -111,6 +114,7 @@ function Board() {
     <DragDropProvider onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
       <div className="bg-gray-950 text-white p-6 h-full">
         <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold">{boardTitle}</h3>
           <button 
             onClick={() => setShowModal(true)}
             className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
