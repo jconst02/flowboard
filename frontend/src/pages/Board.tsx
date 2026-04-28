@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import CreateModal from "../components/CreateModal";
 import { createCard, createList, deleteCard, deleteList, getBoard, getCardsByBoard, getLists, moveCard } from "../api/api";
 import { useParams } from "react-router-dom"
@@ -7,6 +7,7 @@ import { DragDropProvider } from "@dnd-kit/react";
 import type { Card, List } from "../types";
 import { move } from "@dnd-kit/helpers"
 import { isSortable } from "@dnd-kit/react/sortable"
+import { io } from "socket.io-client";
 
 function Board() {
   const { boardId } = useParams();
@@ -15,6 +16,7 @@ function Board() {
   const [lists, setLists] = useState<List[]>([]);
   const [items, setItems] = useState<Record<string, Card[]>>({});
   const [boardTitle, setBoardTitle] = useState("");
+  const socketRef = useRef(null);
 
   const buildItems = (lists: List[], cards: Card[]) => {
     const byList = lists.reduce((acc, list) => {
@@ -42,6 +44,18 @@ function Board() {
       setItems(buildItems(lists, cards));
     });
   },[boardId]);
+
+  useEffect(() => {
+    if (!boardId) return;
+
+    const socket = io(import.meta.env.VITE_API_URL);
+    socketRef.current = socket;
+    socket.emit("join-board", boardId);
+
+    return () => {
+      socket.disconnect();
+    }
+  }, [boardId]);
 
   //updeta this. i think group is wrong. get new group. redo func pretty much. WORKS I THINK
   const handleDragEnd = async (event) => {
