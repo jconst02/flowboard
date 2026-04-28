@@ -1,6 +1,6 @@
 import { useState } from "react"
 import CreateModal from "../components/CreateModal";
-import { createBoard } from "../api/api";
+import { createBoard, deleteBoard } from "../api/api";
 import { useAuth } from "@clerk/react";
 import { useBoards } from "../hooks/useBoards";
 import BoardCard from "../components/board/BoardCard";
@@ -17,6 +17,11 @@ function Home() {
     queryClient.invalidateQueries({ queryKey: ["boards", userId]} )
     setShowModal(false)
   }
+
+  const handleDelete = async (boardId: string) => {
+    await deleteBoard(boardId);
+    queryClient.invalidateQueries({ queryKey: ["boards", userId]} );
+  }
   
   return (
     <div className="bg-gray-950 text-white p-6">
@@ -32,7 +37,7 @@ function Home() {
 
       <div className="grid grid-cols-5 gap-4">
         {boards?.map(board => (
-          <BoardCard key={board.id} board={board} />
+          <BoardCard key={board.id} board={board} onDelete={handleDelete} />
         ))}
       </div>
 
