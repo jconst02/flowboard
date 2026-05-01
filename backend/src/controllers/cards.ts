@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import pool from "../db";
+import { getIO } from "../socket";
 
 export const createCard = async (req: Request, res: Response) => {
-    const { title, list_id, board_id } = req.body;
+    const io = getIO();
+    const { title, list_id, board_id, socket_id } = req.body;
   
     const countResult = await pool.query(
         "SELECT COUNT(*) FROM cards WHERE list_id = $1",
@@ -16,6 +18,11 @@ export const createCard = async (req: Request, res: Response) => {
       [title, list_id, board_id, position]
     );
   
+    if (socket_id) {
+        io.to(board_id).except(socket_id).emit("card-added", {
+            card: card.rows[0]
+        })
+    }
     return res.status(201).json(card.rows[0]);
 }
 
@@ -44,8 +51,9 @@ export const getCardsByBoard = async (req: Request, res: Response) => {
 
 
 export const moveCard = async (req: Request, res: Response) => {
+    const io = getIO();
     const { cardId } = req.params;
-    const { list_id, position } = req.body;
+    const { list_id, position, socket_id } = req.body;
 
     await pool.query("BEGIN");
 
@@ -91,7 +99,19 @@ export const moveCard = async (req: Request, res: Response) => {
         );
         
         await pool.query("COMMIT");
-
+        
+        if (socket_id){
+            console.log("ight");
+            io.to(cards.rows[0].board_id).except(socket_id).emit("card-moved", {
+                card: cards.rows[0],
+                oldListId: oldListId
+            });
+        } else {
+            io.to(cards.rows[0].board_id).emit("card-moved", {
+                card: cards.rows[0],
+                oldListId: oldListId
+            });
+        }
         return res.json(cards.rows[0]);
 
     } catch(e) {
@@ -102,13 +122,15 @@ export const moveCard = async (req: Request, res: Response) => {
 
 
 export const deleteCard = async (req: Request, res: Response) => {
+    const io = getIO();
     const { cardId } = req.params;
+    const { socket_id } = req.body;
 
     await pool.query("BEGIN");
 
     try {
         const card = await pool.query(
-            "SELECT list_id, position FROM cards WHERE id = $1",
+            "SELECT id, list_id, position, board_id FROM cards WHERE id = $1",
             [cardId]
         );
     
@@ -128,6 +150,12 @@ export const deleteCard = async (req: Request, res: Response) => {
     
         await pool.query("COMMIT");
 
+        if (socket_id) {
+            io.to(card.rows[0].board_id).except(socket_id).emit("card-deleted", {
+                cardId: card.rows[0].id,
+                listId: card.rows[0].list_id
+            });
+        }
         return res.json({ message: "Card deleted" });
 
     } catch(e) {

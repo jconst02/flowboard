@@ -52,6 +52,42 @@ function Board() {
     socketRef.current = socket;
     socket.emit("join-board", boardId);
 
+    socket.on("card-moved", ({card, oldListId}) => {
+      
+      setItems(prev => {
+        const updated = { ...prev };
+
+        updated[oldListId] = prev[oldListId]?.filter(c => c.id !== card.id) ?? [];
+
+        const newList = [...(updated[card.list_id] ?? [])];
+        newList.splice(card.position, 0, card);
+        updated[card.list_id] = newList
+
+        return updated
+      })
+    })
+
+    socket.on("card-added", ({ card }) => {
+      setItems(prev => {
+        const updated = { ...prev }
+
+        const newList = [...(updated[card.list_id] ?? [])];
+        newList.splice(card.position, 0, card);
+        updated[card.list_id] = newList;
+
+        return updated;
+      })
+    })
+
+    socket.on("card-deleted", ({ cardId, listId }) => {
+      setItems(prev => {
+        const updated = { ...prev };
+        
+        updated[listId] = prev[listId]?.filter(c => c.id !== cardId) ?? [];
+        return updated;
+      })
+    })
+
     return () => {
       socket.disconnect();
     }
@@ -77,7 +113,7 @@ function Board() {
       )
     }));
 
-    await moveCard(source.id, newListId, newIndex);
+    await moveCard(source.id, newListId, newIndex, socketRef.current?.id);
   }
 
   //5db is im moving from. 12b is where im dropping
@@ -107,7 +143,7 @@ function Board() {
   }
 
   const handleDeleteCard = async (cardId: string, listId: string) => {
-    await deleteCard(cardId)
+    await deleteCard(cardId, socketRef.current?.id);
     setItems(prev => ({
       ...prev,
       [listId]: prev[listId].filter(c => c.id !== cardId)
@@ -116,7 +152,7 @@ function Board() {
   }
 
   const handleAddCard = async (title: string, listId: string) => {
-    const newCard = await createCard(title, listId, boardId!);
+    const newCard = await createCard(title, listId, boardId!, socketRef.current?.id);
     console.log(newCard);
     setItems(prev => ({
       ...prev,

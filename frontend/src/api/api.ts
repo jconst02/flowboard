@@ -54,11 +54,11 @@ export const deleteList = async (listId: string): Promise<string> => {
 
 //CARDS
 
-export const createCard = async (title: string, listId: string, boardId: string): Promise<Card>  => {
+export const createCard = async (title: string, listId: string, boardId: string, socketId?: string): Promise<Card>  => {
   const res = await fetch(`${BASE_URL}/cards`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, list_id: listId, board_id: boardId })
+    body: JSON.stringify({ title, list_id: listId, board_id: boardId, socket_id: socketId })
   });
   return res.json();
 }
@@ -68,18 +68,20 @@ export const getCards = async (listId: string): Promise<Card[]>  => {
   return res.json();
 }
 
-export const deleteCard = async (cardId: string): Promise<string> => {
+export const deleteCard = async (cardId: string, socketId?: string): Promise<string> => {
   const res = await fetch(`${BASE_URL}/cards/${cardId}`, {
-    method: "DELETE"
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ socket_id: socketId })
   });
   return res.json();
 }
 
-export const moveCard = async (cardId: string, listId: string, position: number): Promise<Card> => {
+export const moveCard = async (cardId: string, listId: string, position: number, socketId?: string): Promise<Card> => {
   const res = await fetch(`${BASE_URL}/cards/${cardId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ list_id: listId, position })
+    body: JSON.stringify({ list_id: listId, position, socket_id: socketId })
   });
   return res.json();
 }
