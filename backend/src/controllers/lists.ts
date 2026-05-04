@@ -1,22 +1,44 @@
 import { Request, Response } from "express";
 import pool from "../db";
+import { getIO } from "../socket";
 
 export const createList = async (req: Request, res: Response) => {
-    const { title, board_id } = req.body;
-  
-    const countResult = await pool.query(
-        "SELECT COUNT(*) FROM lists WHERE board_id = $1",
-        [board_id]
-    );
+    const io = getIO();
+    const { title, board_id, socket_id } = req.body;
 
-    const position = parseInt(countResult.rows[0].count);
-
-    const list = await pool.query(
-      "INSERT INTO lists (title, board_id, position) VALUES ($1, $2, $3) RETURNING *",
-      [title, board_id, position]
-    );
-  
-    return res.status(201).json(list.rows[0]);
+    await pool.query("BEGIN");
+    
+    try {
+        const countResult = await pool.query(
+            "SELECT COUNT(*) FROM lists WHERE board_id = $1",
+            [board_id]
+        );
+    
+        const position = parseInt(countResult.rows[0].count);
+    
+        const list = await pool.query(
+          "INSERT INTO lists (title, board_id, position) VALUES ($1, $2, $3) RETURNING *",
+          [title, board_id, position]
+        );
+      
+        await pool.query("COMMIT");
+    
+        if (socket_id) {
+            io.to(board_id).except(socket_id).emit("list-created", {
+                list: list.rows[0]
+            })
+        } else {
+            io.to(board_id).emit("list-created", {
+                list: list.rows[0]
+            })
+        }
+        
+        return res.status(201).json(list.rows[0]);
+        
+    } catch(e) {
+        await pool.query("ROLLBACK");
+        throw e;
+    }
 }
 
 export const getLists = async (req: Request, res: Response) => {
@@ -32,7 +54,9 @@ export const getLists = async (req: Request, res: Response) => {
 
 
 export const deleteList = async (req: Request, res: Response) => {
+    const io = getIO();
     const { listId } = req.params;
+    const { socket_id } = req.body;
 
     await pool.query("BEGIN");
 
@@ -58,6 +82,11 @@ export const deleteList = async (req: Request, res: Response) => {
     
         await pool.query("COMMIT");
 
+        if (socket_id) {
+            io.to(board_id).except(socket_id).emit("list-deleted", listId)
+        } else {
+            io.to(board_id).emit("list-deleted", listId)
+        }
         return res.json({ message: "List deleted" });
     
     } catch(e) {

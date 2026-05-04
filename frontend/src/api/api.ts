@@ -31,11 +31,11 @@ export const deleteBoard = async (boardId: string): Promise<string> => {
 
 //LISTS
 
-export const createList = async (title: string, boardId: string): Promise<List> => {
+export const createList = async (title: string, boardId: string, socketId?: string): Promise<List> => {
   const res = await fetch(`${BASE_URL}/lists`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, board_id: boardId})
+    body: JSON.stringify({ title, board_id: boardId, socket_id: socketId})
   });
   return res.json();
 }
@@ -45,9 +45,11 @@ export const getLists = async (boardId: string): Promise<List[]> => {
   return res.json();
 }
 
-export const deleteList = async (listId: string): Promise<string> => {
+export const deleteList = async (listId: string, socketId?: string): Promise<string> => {
   const res = await fetch(`${BASE_URL}/lists/${listId}`, {
-    method: "DELETE"
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ socket_id: socketId })
   });
   return res.json();
 }

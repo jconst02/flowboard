@@ -19,7 +19,7 @@ export const createCard = async (req: Request, res: Response) => {
     );
   
     if (socket_id) {
-        io.to(board_id).except(socket_id).emit("card-added", {
+        io.to(board_id).except(socket_id).emit("card-created", {
             card: card.rows[0]
         })
     }

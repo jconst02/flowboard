@@ -67,7 +67,7 @@ function Board() {
       })
     })
 
-    socket.on("card-added", ({ card }) => {
+    socket.on("card-created", ({ card }) => {
       setItems(prev => {
         const updated = { ...prev }
 
@@ -86,6 +86,21 @@ function Board() {
         updated[listId] = prev[listId]?.filter(c => c.id !== cardId) ?? [];
         return updated;
       })
+    })
+
+    socket.on("list-created", ({ list }) => {
+      //TODO: potentially sort this cuz when 2 users create lists at the same time there is a chance one of theirs is out of position visually
+      setLists(prev => [...prev, list]);
+      setItems(prev => ({...prev, [list.id]: []}));
+    })
+
+    socket.on("list-deleted", (listId: string) => {
+      setLists(prev => prev.filter(l => l.id !== listId));
+      setItems(prev => {
+        const updated = { ...prev };
+        delete updated[listId];
+        return updated;
+      });
     })
 
     return () => {
@@ -126,14 +141,14 @@ function Board() {
   }
 
   const handleCreateList = async(title: string) => {
-    const newList = await createList(title, boardId);
+    const newList = await createList(title, boardId, socketRef.current?.id);
     setLists(prev => [...prev, newList])
     setItems(prev => ({ ...prev, [newList.id]: [] }))
     setShowModal(false)
   }
 
   const handleDeleteList = async(listId: string) => {
-    await deleteList(listId);
+    await deleteList(listId, socketRef.current?.id);
     setLists(prev => prev.filter(l => l.id !== listId));
     setItems(prev => {
       const updated = { ...prev }
