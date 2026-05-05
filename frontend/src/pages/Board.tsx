@@ -4,10 +4,12 @@ import { createCard, createList, deleteCard, deleteList, getBoard, getCardsByBoa
 import { useParams } from "react-router-dom"
 import ListColumn from "../components/ListColumn";
 import { DragDropProvider } from "@dnd-kit/react";
-import type { Card, List } from "../types";
+import type { Card, List, UserPresence } from "../types";
 import { move } from "@dnd-kit/helpers"
 import { isSortable } from "@dnd-kit/react/sortable"
 import { io } from "socket.io-client";
+import { useUser } from '@clerk/react';
+import PresenceBar from "../components/PresenceBar";
 
 function Board() {
   const { boardId } = useParams();
@@ -15,8 +17,10 @@ function Board() {
 
   const [lists, setLists] = useState<List[]>([]);
   const [items, setItems] = useState<Record<string, Card[]>>({});
+  const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
   const [boardTitle, setBoardTitle] = useState("");
   const socketRef = useRef(null);
+  const { user } = useUser();
 
   const buildItems = (lists: List[], cards: Card[]) => {
     const byList = lists.reduce((acc, list) => {
@@ -50,13 +54,22 @@ function Board() {
 
     const socket = io(import.meta.env.VITE_API_URL);
     socketRef.current = socket;
-    socket.emit("join-board", boardId);
+
+    socket.emit("join-board", {
+      boardId,
+      userId: user?.id,
+      userName: user?.fullName,
+      userAvatar: user?.imageUrl
+    });
+
+    socket.on("presence-update", (users) => {
+      setActiveUsers(users);
+      console.log(users);
+    })
 
     socket.on("card-moved", ({card, oldListId}) => {
-      
       setItems(prev => {
         const updated = { ...prev };
-
         updated[oldListId] = prev[oldListId]?.filter(c => c.id !== card.id) ?? [];
 
         const newList = [...(updated[card.list_id] ?? [])];
@@ -180,6 +193,8 @@ function Board() {
       <div className="bg-gray-950 text-white p-6 h-full">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-2xl font-bold">{boardTitle}</h3>
+
+          <PresenceBar users={activeUsers} />
           <button 
             onClick={() => setShowModal(true)}
             className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"

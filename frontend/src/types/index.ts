@@ -19,3 +19,11 @@ export interface Card {
     board_id: string
     position: number
 }
+
+export interface UserPresence {
+    userId: string
+    userName?: string
+    userAvatar?: string
+    socketIds: string[]
+  }
+  
