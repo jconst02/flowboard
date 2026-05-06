@@ -75,6 +75,7 @@ io.on("connection", (socket) => {
       .filter(user => user.socketIds.length > 0);
     
     io.to(boardId).emit("presence-update", boardUsers[boardId])
+    io.to(boardId).emit("cursor-leave", { socketId: socket.id });
   
     console.log("user disconnected", socket.id);
   });

@@ -149,6 +149,7 @@ function Board() {
   }, [boardId]);
 
   //updeta this. i think group is wrong. get new group. redo func pretty much. WORKS I THINK
+  //TODO: add socket event to make card not drabale on others end
   const handleDragEnd = async (event) => {
     const { operation, canceled } = event;
 
@@ -174,10 +175,16 @@ function Board() {
   //5db is im moving from. 12b is where im dropping
 
   //idk somethign here: TODO: FIX THSI AND MAYBE HANDLE DRAG TO ALLOW TO DRAG OVER/ FIXED I THINK
+  //TODO: socket event to display card being dragged on other end
   const handleDragOver = async(event) => {
-    const { source } = event.operation
-    if (!isSortable(source)) return
-    setItems(items => move(items, event))
+    const { source } = event.operation;
+    if (!isSortable(source)) return;
+    setItems(items => move(items, event));
+  }
+
+  //TODO: socket even wehn starting to drag to make cardl locked on others
+  const handleDragStart = async(event) => {
+    const { source } = event.operation;
   }
 
   const handleCreateList = async(title: string) => {
