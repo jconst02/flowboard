@@ -18,6 +18,7 @@ function Board() {
   const [lists, setLists] = useState<List[]>([]);
   const [items, setItems] = useState<Record<string, Card[]>>({});
   const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
+  const [cursors, setCursor] = useState<Record<string, { x: number, y: number, userName: string}>>({});
   const [boardTitle, setBoardTitle] = useState("");
   const socketRef = useRef(null);
   const { user } = useUser();
@@ -116,7 +117,33 @@ function Board() {
       });
     })
 
+    const handleMouseMove = (e: MouseEvent) => {
+      socket.emit("cursor-move", { boardId, x: e.clientX, y: e.clientY, userName: user?.fullName });
+    }
+    window.addEventListener("mousemove", handleMouseMove);
+
+    socket.on("cursor-move", ({ socketId, x, y, userName }) => {
+      setCursor(prev => ({ ...prev, [socketId]: { x, y, userName }}))
+    })
+
+
+    const handleMouseLeave = () => {
+      console.log("check")
+      socket.emit("cursor-leave", { boardId });
+    }
+    document.addEventListener("mouseleave", handleMouseLeave);
+
+    socket.on("cursor-leave", ({ socketId }) => {
+      setCursor(prev => {
+        const updated = { ...prev };
+        delete updated[socketId];
+        return updated;
+      })
+    })
+
     return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
       socket.disconnect();
     }
   }, [boardId]);
@@ -225,6 +252,17 @@ function Board() {
           />
         )}
       </div>
+      {Object.entries(cursors).map(([socketId, {x, y, userName }]) => (
+        <div
+          key={socketId}
+          className="fixed pointer-events-none z-50"
+          style={{left: x, top: y }}
+        >
+          <div className="w-2 h-2 rounded-full bg-blue-500"/>
+          <span className="text-xs text-white bg-blue=500 px-1 rounded ml-1 whitespace-nowrap"></span>
+          {userName}
+        </div>
+      ))}
     </DragDropProvider>
   )
 }

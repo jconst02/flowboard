@@ -78,6 +78,15 @@ io.on("connection", (socket) => {
   
     console.log("user disconnected", socket.id);
   });
+
+  socket.on("cursor-move", ({ boardId, x, y, userName }) => {
+    socket.to(boardId).emit("cursor-move", { socketId: socket.id, x, y, userName });
+  });
+
+  socket.on("cursor-leave", ({ boardId }) => {
+    socket.to(boardId).emit("cursor-leave", { socketId: socket.id });
+  })
+
 });
 
 setIO(io);
