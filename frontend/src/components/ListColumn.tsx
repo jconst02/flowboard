@@ -7,12 +7,13 @@ import { CollisionPriority } from '@dnd-kit/abstract';
 interface Props {
   list: List,
   cards: Card[],
+  lockedCards: Set<string>,
   onDeleteList: (listId: string) => void,
   onDeleteCard: (cardId: string, listId: string) => void,
   onAddCard: (title: string, listId: string) => void
 }
 
-function ListColumn({ list, cards, onDeleteList, onDeleteCard, onAddCard }: Props) {
+function ListColumn({ list, cards, lockedCards, onDeleteList, onDeleteCard, onAddCard }: Props) {
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("")
 
@@ -46,6 +47,7 @@ function ListColumn({ list, cards, onDeleteList, onDeleteCard, onAddCard }: Prop
                 card={card}
                 index={index}
                 listId={list.id}
+                lockedCards={lockedCards}
                 onDelete={() => onDeleteCard(card.id, list.id)}
               />
           ))}

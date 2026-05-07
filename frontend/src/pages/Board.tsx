@@ -19,6 +19,7 @@ function Board() {
   const [items, setItems] = useState<Record<string, Card[]>>({});
   const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
   const [cursors, setCursor] = useState<Record<string, { x: number, y: number, userName: string}>>({});
+  const [lockedCards, setLockedCards] = useState<Set<string>>(new Set());
   const [boardTitle, setBoardTitle] = useState("");
   const socketRef = useRef(null);
   const { user } = useUser();
@@ -70,14 +71,18 @@ function Board() {
 
     socket.on("card-moved", ({card, oldListId}) => {
       setItems(prev => {
-        const updated = { ...prev };
-        updated[oldListId] = prev[oldListId]?.filter(c => c.id !== card.id) ?? [];
+        // const updated = { ...prev };
+        // updated[oldListId] = prev[oldListId]?.filter(c => c.id !== card.id) ?? [];
+        const updated = Object.fromEntries(
+          Object.entries(prev).map(([id, cards]) => [
+            id, cards.filter(c => c.id !== card.id)
+          ])
+        )
 
         const newList = [...(updated[card.list_id] ?? [])];
         newList.splice(card.position, 0, card);
-        updated[card.list_id] = newList
-
-        return updated
+        updated[card.list_id] = newList;
+        return updated;
       })
     })
 
@@ -141,6 +146,44 @@ function Board() {
       })
     })
 
+    socket.on("card-drag-start", ({ cardId }) => {
+      setLockedCards(prev => new Set(prev).add(cardId));
+    })
+
+    socket.on("card-dragging", ({ cardId, listId, index}) => {
+      setItems(prev => {
+        let movingCard: Card | undefined;
+        //remove cardId from whatever list it is in
+        const updated = Object.fromEntries(
+          Object.entries(prev).map(([id, cards]) => {
+            const filtered = cards.filter(card => {
+              if (card.id === cardId) {
+                movingCard = card;
+                return false;
+              }
+              return true;
+            });
+
+            return [id, filtered];
+          })
+        );
+        if (!movingCard) return prev;
+        const newList = [...(updated[listId] ?? [])];
+        const newIndex = Math.min(index, newList.length);
+        newList.splice(newIndex, 0, movingCard);
+        updated[listId] = newList;
+        return updated;
+      })
+    })
+
+    socket.on("card-drag-end", ({ cardId }) => {
+      setLockedCards(prev => {
+        const locked = new Set(prev);
+        locked.delete(cardId);
+        return locked;
+      })
+    })
+
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseleave", handleMouseLeave);
@@ -170,6 +213,7 @@ function Board() {
     }));
 
     await moveCard(source.id, newListId, newIndex, socketRef.current?.id);
+    socketRef.current?.emit("card-drag-end", { boardId, cardId: source.id });
   }
 
   //5db is im moving from. 12b is where im dropping
@@ -177,14 +221,29 @@ function Board() {
   //idk somethign here: TODO: FIX THSI AND MAYBE HANDLE DRAG TO ALLOW TO DRAG OVER/ FIXED I THINK
   //TODO: socket event to display card being dragged on other end
   const handleDragOver = async(event) => {
-    const { source } = event.operation;
+    const { source, target } = event.operation;
     if (!isSortable(source)) return;
+
     setItems(items => move(items, event));
+
+    if (target?.id == null) return;
+
+    const listId = lists.some(l => l.id === target.id) ? target.id : target.group;
+    
+    socketRef.current?.emit("card-dragging", {
+      boardId,
+      cardId: source.id,
+      listId,
+      index: source.index
+    })
   }
 
   //TODO: socket even wehn starting to drag to make cardl locked on others
   const handleDragStart = async(event) => {
     const { source } = event.operation;
+    
+    console.log(source);
+    socketRef.current.emit("card-drag-start", { boardId, cardId: source.id })
   }
 
   const handleCreateList = async(title: string) => {
@@ -223,7 +282,7 @@ function Board() {
   }
 
   return (
-    <DragDropProvider onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
+    <DragDropProvider onDragEnd={handleDragEnd} onDragOver={handleDragOver} onDragStart={handleDragStart}>
       <div className="bg-gray-950 text-white p-6 h-full">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-2xl font-bold">{boardTitle}</h3>
@@ -243,6 +302,7 @@ function Board() {
               key={list.id} 
               list={list} 
               cards={items[list.id]}
+              lockedCards={lockedCards}
               onDeleteList={handleDeleteList}
               onDeleteCard={handleDeleteCard} 
               onAddCard={handleAddCard}

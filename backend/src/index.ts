@@ -86,6 +86,18 @@ io.on("connection", (socket) => {
 
   socket.on("cursor-leave", ({ boardId }) => {
     socket.to(boardId).emit("cursor-leave", { socketId: socket.id });
+  });
+
+  socket.on("card-drag-start", ({ boardId, cardId }) => {
+    socket.to(boardId).emit("card-drag-start", { cardId });
+  });
+
+  socket.on("card-dragging", ({ boardId, cardId, listId, index }) => {
+    socket.to(boardId).emit("card-dragging", { cardId, listId, index });
+  });
+
+  socket.on("card-drag-end", ({ boardId, cardId }) => {
+    socket.to(boardId).emit('card-drag-end', { cardId });
   })
 
 });
