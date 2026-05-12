@@ -9,11 +9,11 @@ import { useQueryClient } from "@tanstack/react-query";
 function Home() {
   const [showModal, setShowModal] = useState(false);
   const { userId } = useAuth();
-  const { data: boards } = useBoards(userId);
+  const { data: boards } = useBoards(userId!);
   const queryClient = useQueryClient();
 
   const handleCreate = async(title: string) => {
-    await createBoard(title, userId);
+    await createBoard(title, userId!);
     queryClient.invalidateQueries({ queryKey: ["boards", userId]} )
     setShowModal(false)
   }

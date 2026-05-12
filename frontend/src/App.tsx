@@ -1,5 +1,5 @@
-import { useAuth, RedirectToSignIn, UserButton } from "@clerk/react"
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth, RedirectToSignIn } from "@clerk/react"
+import { Routes, Route } from 'react-router-dom';
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
 import Board from "./pages/Board";

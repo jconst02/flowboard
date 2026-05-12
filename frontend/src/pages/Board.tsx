@@ -7,7 +7,7 @@ import { DragDropProvider } from "@dnd-kit/react";
 import type { Card, List, UserPresence } from "../types";
 import { move } from "@dnd-kit/helpers"
 import { isSortable } from "@dnd-kit/react/sortable"
-import { io } from "socket.io-client";
+import { Socket, io } from "socket.io-client";
 import { useUser } from '@clerk/react';
 import PresenceBar from "../components/PresenceBar";
 
@@ -21,7 +21,7 @@ function Board() {
   const [cursors, setCursor] = useState<Record<string, { x: number, y: number, userName: string}>>({});
   const [lockedCards, setLockedCards] = useState<Set<string>>(new Set());
   const [boardTitle, setBoardTitle] = useState("");
-  const socketRef = useRef(null);
+  const socketRef = useRef<Socket | null>(null);
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
 
@@ -71,7 +71,7 @@ function Board() {
       console.log(users);
     })
 
-    socket.on("card-moved", ({card, oldListId}) => {
+    socket.on("card-moved", ({ card }) => {
       setItems(prev => {
         // const updated = { ...prev };
         // updated[oldListId] = prev[oldListId]?.filter(c => c.id !== card.id) ?? [];
@@ -195,7 +195,7 @@ function Board() {
 
   //updeta this. i think group is wrong. get new group. redo func pretty much. WORKS I THINK
   //TODO: add socket event to make card not drabale on others end
-  const handleDragEnd = async (event) => {
+  const handleDragEnd = async (event: any) => {
     const { operation, canceled } = event;
 
     if (canceled) return;
@@ -222,7 +222,7 @@ function Board() {
 
   //idk somethign here: TODO: FIX THSI AND MAYBE HANDLE DRAG TO ALLOW TO DRAG OVER/ FIXED I THINK
   //TODO: socket event to display card being dragged on other end
-  const handleDragOver = async(event) => {
+  const handleDragOver = async(event: any) => {
     const { source, target } = event.operation;
     if (!isSortable(source)) return;
 
@@ -241,15 +241,15 @@ function Board() {
   }
 
   //TODO: socket even wehn starting to drag to make cardl locked on others
-  const handleDragStart = async(event) => {
+  const handleDragStart = async(event: any) => {
     const { source } = event.operation;
     
     console.log(source);
-    socketRef.current.emit("card-drag-start", { boardId, cardId: source.id })
+    socketRef.current?.emit("card-drag-start", { boardId, cardId: source.id })
   }
 
   const handleCreateList = async(title: string) => {
-    const newList = await createList(title, boardId, socketRef.current?.id);
+    const newList = await createList(title, boardId!, socketRef.current?.id);
     setLists(prev => [...prev, newList])
     setItems(prev => ({ ...prev, [newList.id]: [] }))
     setShowModal(false)
