@@ -35,6 +35,9 @@ function Home() {
         </button>
       </div>
 
+      {boards?.length === 0 && (
+        <p className="text-gray-500">No boards yet - create one to get started.</p>
+      )}
       <div className="grid grid-cols-5 gap-4">
         {boards?.map(board => (
           <BoardCard key={board.id} board={board} onDelete={handleDelete} />

@@ -23,6 +23,7 @@ function Board() {
   const [boardTitle, setBoardTitle] = useState("");
   const socketRef = useRef(null);
   const { user } = useUser();
+  const [loading, setLoading] = useState(true);
 
   const buildItems = (lists: List[], cards: Card[]) => {
     const byList = lists.reduce((acc, list) => {
@@ -48,6 +49,7 @@ function Board() {
       setBoardTitle(board.title);
       setLists(lists);
       setItems(buildItems(lists, cards));
+      setLoading(false);
     });
   },[boardId]);
 
@@ -297,6 +299,9 @@ function Board() {
         </div>
 
         <div className="grid grid-flow-col auto-cols-[200px] overflow-x-auto overflow-y-auto h-[calc(100vh-180px)]">
+          {!loading && lists?.length === 0 && (
+            <p className="text-gray-500">No lists yet - add one to get started.</p>
+          )}
           {lists?.map(list => (
             <ListColumn 
               key={list.id} 
