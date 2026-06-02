@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { clerkMiddleware } from "@clerk/express";
 import { setIO } from "./socket";
 import boardRoutes from "./routes/boards";
 import listRoutes from "./routes/lists";
@@ -16,6 +17,10 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+app.use(clerkMiddleware({
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+  secretKey: process.env.CLERK_SECRET_KEY,
+}));
 
 app.get("/", (req, res) => {
   res.send("ok")

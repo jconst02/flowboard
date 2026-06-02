@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import CreateModal from "../components/CreateModal";
-import { createCard, createList, deleteCard, deleteList, getBoard, getCardsByBoard, getLists, moveCard } from "../api/api";
+import { createCard, createList, deleteCard, deleteList, getCardsByBoard, getLists, moveCard } from "../api/api";
 import { useParams } from "react-router-dom"
 import ListColumn from "../components/ListColumn";
 import { DragDropProvider } from "@dnd-kit/react";
@@ -10,6 +10,7 @@ import { isSortable } from "@dnd-kit/react/sortable"
 import { Socket, io } from "socket.io-client";
 import { useUser } from '@clerk/react';
 import PresenceBar from "../components/PresenceBar";
+import { useApi } from "../hooks/useApi";
 
 function Board() {
   const { boardId } = useParams();
@@ -24,6 +25,7 @@ function Board() {
   const socketRef = useRef<Socket | null>(null);
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
+  const api = useApi();
 
   const buildItems = (lists: List[], cards: Card[]) => {
     const byList = lists.reduce((acc, list) => {
@@ -42,7 +44,7 @@ function Board() {
     if (!boardId) return;
 
     Promise.all([
-      getBoard(boardId),
+      api.getBoard(boardId),
       getLists(boardId),
       getCardsByBoard(boardId)
     ]).then(([board, lists, cards]) => {

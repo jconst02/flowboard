@@ -1,31 +1,60 @@
 import type { Board, Card, List } from "../types";
 
-const BASE_URL = import.meta.env.VITE_API_URL
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 //BOARDS
-export const createBoard = async (title: string, userId: string): Promise<Board> => {
-    const res = await fetch(`${BASE_URL}/boards`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, user_id: userId })
-    })
-    return res.json();
-}
-
-export const getBoards = async (userId: string): Promise<Board[]> => {
-  const res = await fetch(`${BASE_URL}/boards?user_id=${userId}`);
+export const createBoard = async (title: string, token: string): Promise<Board> => {
+  const res = await fetch(`${BASE_URL}/boards`, {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ title }),
+  })
   return res.json();
 }
 
-export const getBoard = async (boardId: string): Promise<Board> => {
-  const res = await fetch(`${BASE_URL}/boards/${boardId}`);
-  return res.json();
-}
-
-export const deleteBoard = async (boardId: string): Promise<string> => {
-  const res = await fetch(`${BASE_URL}/boards/${boardId}`, {
-    method: "DELETE"
+export const getBoards = async (token: string): Promise<Board[]> => {
+  const res = await fetch(`${BASE_URL}/boards`, {
+    method: "GET",
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
   });
+  return res.json();
+}
+
+export const getBoard = async (boardId: string, token: string): Promise<Board> => {
+  const res = await fetch(`${BASE_URL}/boards/${boardId}`, {
+    method: "GET",
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch board");
+  }
+
+  return res.json();
+}
+
+export const deleteBoard = async (boardId: string, token: string): Promise<string> => {
+  const res = await fetch(`${BASE_URL}/boards/${boardId}`, {
+    method: "DELETE",
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(res.statusText);
+  }
+
   return res.json();
 }
 

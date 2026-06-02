@@ -1,25 +1,26 @@
 import { useState } from "react"
 import CreateModal from "../components/CreateModal";
-import { createBoard, deleteBoard } from "../api/api";
 import { useAuth } from "@clerk/react";
 import { useBoards } from "../hooks/useBoards";
 import BoardCard from "../components/board/BoardCard";
 import { useQueryClient } from "@tanstack/react-query";
+import { useApi } from "../hooks/useApi";
 
 function Home() {
   const [showModal, setShowModal] = useState(false);
   const { userId } = useAuth();
   const { data: boards } = useBoards(userId!);
   const queryClient = useQueryClient();
+  const api = useApi();
 
   const handleCreate = async(title: string) => {
-    await createBoard(title, userId!);
+    await api.createBoard(title);
     queryClient.invalidateQueries({ queryKey: ["boards", userId]} )
     setShowModal(false)
   }
 
   const handleDelete = async (boardId: string) => {
-    await deleteBoard(boardId);
+    await api.deleteBoard(boardId);
     queryClient.invalidateQueries({ queryKey: ["boards", userId]} );
   }
   
