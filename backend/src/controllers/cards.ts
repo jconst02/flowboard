@@ -101,7 +101,6 @@ export const moveCard = async (req: Request, res: Response) => {
         await pool.query("COMMIT");
         
         if (socket_id){
-            console.log("ight");
             io.to(cards.rows[0].board_id).except(socket_id).emit("card-moved", {
                 card: cards.rows[0],
                 oldListId: oldListId

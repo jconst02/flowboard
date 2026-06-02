@@ -68,7 +68,6 @@ function Board() {
 
     socket.on("presence-update", (users) => {
       setActiveUsers(users);
-      console.log(users);
     })
 
     socket.on("card-moved", ({ card }) => {
@@ -135,7 +134,6 @@ function Board() {
 
 
     const handleMouseLeave = () => {
-      console.log("check")
       socket.emit("cursor-leave", { boardId });
     }
     document.addEventListener("mouseleave", handleMouseLeave);
@@ -243,8 +241,6 @@ function Board() {
   //TODO: socket even wehn starting to drag to make cardl locked on others
   const handleDragStart = async(event: any) => {
     const { source } = event.operation;
-    
-    console.log(source);
     socketRef.current?.emit("card-drag-start", { boardId, cardId: source.id })
   }
 
@@ -271,12 +267,10 @@ function Board() {
       ...prev,
       [listId]: prev[listId].filter(c => c.id !== cardId)
     }))
-    console.log(items);
   }
 
   const handleAddCard = async (title: string, listId: string) => {
     const newCard = await createCard(title, listId, boardId!, socketRef.current?.id);
-    console.log(newCard);
     setItems(prev => ({
       ...prev,
       [listId]: [...(prev[listId] ?? []), newCard]
