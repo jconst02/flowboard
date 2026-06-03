@@ -60,24 +60,36 @@ export const deleteBoard = async (boardId: string, token: string): Promise<strin
 
 //LISTS
 
-export const createList = async (title: string, boardId: string, socketId?: string): Promise<List> => {
+export const createList = async (title: string, boardId: string, token: string, socketId?: string): Promise<List> => {
   const res = await fetch(`${BASE_URL}/lists`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ title, board_id: boardId, socket_id: socketId})
   });
   return res.json();
 }
 
-export const getLists = async (boardId: string): Promise<List[]> => {
-  const res = await fetch(`${BASE_URL}/boards/${boardId}/lists`);
+export const getLists = async (boardId: string, token: string): Promise<List[]> => {
+  const res = await fetch(`${BASE_URL}/boards/${boardId}/lists`, {
+    method: "GET",
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },  
+  });
   return res.json();
 }
 
-export const deleteList = async (listId: string, socketId?: string): Promise<string> => {
+export const deleteList = async (listId: string,  token: string, socketId?: string): Promise<string> => {
   const res = await fetch(`${BASE_URL}/lists/${listId}`, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ socket_id: socketId })
   });
   return res.json();

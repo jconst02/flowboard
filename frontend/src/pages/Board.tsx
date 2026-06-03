@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import CreateModal from "../components/CreateModal";
-import { createCard, createList, deleteCard, deleteList, getCardsByBoard, getLists, moveCard } from "../api/api";
+import { createCard, deleteCard, getCardsByBoard, moveCard } from "../api/api";
 import { useParams } from "react-router-dom"
 import ListColumn from "../components/ListColumn";
 import { DragDropProvider } from "@dnd-kit/react";
@@ -45,7 +45,7 @@ function Board() {
 
     Promise.all([
       api.getBoard(boardId),
-      getLists(boardId),
+      api.getLists(boardId),
       getCardsByBoard(boardId)
     ]).then(([board, lists, cards]) => {
       setBoardTitle(board.title);
@@ -247,14 +247,14 @@ function Board() {
   }
 
   const handleCreateList = async(title: string) => {
-    const newList = await createList(title, boardId!, socketRef.current?.id);
+    const newList = await api.createList(title, boardId!, socketRef.current?.id);
     setLists(prev => [...prev, newList])
     setItems(prev => ({ ...prev, [newList.id]: [] }))
     setShowModal(false)
   }
 
   const handleDeleteList = async(listId: string) => {
-    await deleteList(listId, socketRef.current?.id);
+    await api.deleteList(listId, socketRef.current?.id);
     setLists(prev => prev.filter(l => l.id !== listId));
     setItems(prev => {
       const updated = { ...prev }

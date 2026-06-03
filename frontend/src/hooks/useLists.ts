@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { getLists } from "../api/api";
 import type { List } from "../types";
+import { useApi } from "./useApi";
 
 export const useLists = (boardId: string) => {
+    const api = useApi();
+    
     return useQuery<List[]>({
         queryKey: ["lists", boardId],
-        queryFn: () => getLists(boardId)
+        queryFn: () => api.getLists(boardId)
     })
 }

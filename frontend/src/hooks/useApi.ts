@@ -20,6 +20,18 @@ export function useApi() {
         deleteBoard: async (boardId: string) => {
             const token = await getToken();
             return api.deleteBoard(boardId, token!);
+        },
+        getLists: async (boardId: string) => {
+            const token = await getToken();
+            return api.getLists(boardId, token!)
+        },
+        createList: async (title: string, boardId: string, socketId?: string) => {
+            const token = await getToken();
+            return api.createList(title, boardId, token!, socketId);
+        },
+        deleteList: async (listId: string, socketId?: string) => {
+            const token = await getToken();
+            return api.deleteList(listId, token!, socketId);
         }
     }
 }

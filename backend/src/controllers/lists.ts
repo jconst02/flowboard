@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import pool from "../db";
 import { getIO } from "../socket";
+import { getAuth } from "@clerk/express";
 
 export const createList = async (req: Request, res: Response) => {
+    const { userId } = getAuth(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
     const io = getIO();
     const { title, board_id, socket_id } = req.body;
 
@@ -42,6 +46,9 @@ export const createList = async (req: Request, res: Response) => {
 }
 
 export const getLists = async (req: Request, res: Response) => {
+    const { userId } = getAuth(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
     const { boardId } = req.params;
 
     const lists = await pool.query(
@@ -54,6 +61,9 @@ export const getLists = async (req: Request, res: Response) => {
 
 
 export const deleteList = async (req: Request, res: Response) => {
+    const { userId } = getAuth(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    
     const io = getIO();
     const { listId } = req.params;
     const { socket_id } = req.body;
