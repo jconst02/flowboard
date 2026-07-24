@@ -32,6 +32,22 @@ export function useApi() {
         deleteList: async (listId: string, socketId?: string) => {
             const token = await getToken();
             return api.deleteList(listId, token!, socketId);
+        },
+        createCard: async (title: string, listId: string, boardId: string, socketId?: string) => {
+            const token = await getToken();
+            return api.createCard(title, listId, boardId, token!, socketId);
+        },
+        getCardsByBoard: async (boardId: string) => {
+            const token = await getToken();
+            return api.getCardsByBoard(boardId, token!);
+        },
+        deleteCard: async (cardId: string, socketId?: string) => {
+            const token = await getToken();
+            return api.deleteCard(cardId, token!, socketId);
+        },
+        moveCard: async (cardId: string, listId: string, position: number, socketId?: string) => {
+            const token = await getToken();
+            return api.moveCard(cardId, listId, position, token!, socketId);
         }
     }
 }

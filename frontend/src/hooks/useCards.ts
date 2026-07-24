@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCardsByBoard } from "../api/api";
 import type { Card } from "../types";
+import { useApi } from "./useApi";
 
 export const useCards = (boardId: string) => {
+    const api = useApi();
+
     return useQuery<Card[]>({
         queryKey: ["cards", boardId],
-        queryFn: () => getCardsByBoard(boardId)
+        queryFn: () => api.getCardsByBoard(boardId)
     })
 }

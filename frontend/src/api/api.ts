@@ -97,39 +97,60 @@ export const deleteList = async (listId: string,  token: string, socketId?: stri
 
 //CARDS
 
-export const createCard = async (title: string, listId: string, boardId: string, socketId?: string): Promise<Card>  => {
+export const createCard = async (title: string, listId: string, boardId: string, token: string, socketId?: string): Promise<Card>  => {
   const res = await fetch(`${BASE_URL}/cards`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ title, list_id: listId, board_id: boardId, socket_id: socketId })
   });
   return res.json();
 }
 
-export const getCards = async (listId: string): Promise<Card[]>  => {
-  const res = await fetch(`${BASE_URL}/lists/${listId}/cards`);
+export const getCards = async (listId: string, token: string): Promise<Card[]>  => {
+  const res = await fetch(`${BASE_URL}/lists/${listId}/cards`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return res.json();
 }
 
-export const deleteCard = async (cardId: string, socketId?: string): Promise<string> => {
+export const deleteCard = async (cardId: string, token: string, socketId?: string): Promise<string> => {
   const res = await fetch(`${BASE_URL}/cards/${cardId}`, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ socket_id: socketId })
   });
   return res.json();
 }
 
-export const moveCard = async (cardId: string, listId: string, position: number, socketId?: string): Promise<Card> => {
+export const moveCard = async (cardId: string, listId: string, position: number, token: string, socketId?: string): Promise<Card> => {
   const res = await fetch(`${BASE_URL}/cards/${cardId}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ list_id: listId, position, socket_id: socketId })
   });
   return res.json();
 }
 
-export const getCardsByBoard = async (boardId: string): Promise<Card[]> => {
-  const res = await fetch(`${BASE_URL}/boards/${boardId}/cards`)
+export const getCardsByBoard = async (boardId: string, token: string): Promise<Card[]> => {
+  const res = await fetch(`${BASE_URL}/boards/${boardId}/cards`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  })
   return res.json()
 }

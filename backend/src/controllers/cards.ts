@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import pool from "../db";
 import { getIO } from "../socket";
+import { getAuth } from "@clerk/express";
 
 export const createCard = async (req: Request, res: Response) => {
+    const { userId } = getAuth(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
     const io = getIO();
     const { title, list_id, board_id, socket_id } = req.body;
   
@@ -27,6 +31,9 @@ export const createCard = async (req: Request, res: Response) => {
 }
 
 export const getCardsByList = async (req: Request, res: Response) => {
+    const { userId } = getAuth(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
     const { listId } = req.params;
 
     const cards = await pool.query(
@@ -38,6 +45,9 @@ export const getCardsByList = async (req: Request, res: Response) => {
 }
 
 export const getCardsByBoard = async (req: Request, res: Response) => {
+    const { userId } = getAuth(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
     const { boardId } = req.params;
 
     const cards = await pool.query(
@@ -51,6 +61,9 @@ export const getCardsByBoard = async (req: Request, res: Response) => {
 
 
 export const moveCard = async (req: Request, res: Response) => {
+    const { userId } = getAuth(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
     const io = getIO();
     const { cardId } = req.params;
     const { list_id, position, socket_id } = req.body;
@@ -121,6 +134,9 @@ export const moveCard = async (req: Request, res: Response) => {
 
 
 export const deleteCard = async (req: Request, res: Response) => {
+    const { userId } = getAuth(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    
     const io = getIO();
     const { cardId } = req.params;
     const { socket_id } = req.body;
